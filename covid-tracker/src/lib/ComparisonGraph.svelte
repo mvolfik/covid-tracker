@@ -10,19 +10,25 @@
   export let futureDays: number;
   export let data: Array<{ date: Date; cases: number }>;
 
-  let max: Writable<number> = tweened(14000, { duration: 1000, easing: sineOut });
+  const max: Writable<number> = tweened(14000, { duration: 500, easing: sineOut });
   $: $max = data
-    .slice(-xshift, -xshift + pastDays + futureDays + 1)
+    .slice(-simpleXshift, -simpleXshift + pastDays + futureDays + 1)
     .concat(currentPoints)
     .reduce((m, { cases }) => Math.max(m, cases), 0);
+
   let xscale: number;
   let yscale: number;
 
   $: xscale = 2000 / (pastDays + futureDays);
   $: yscale = 1000 / $max;
-  let xshift: number;
+
+  let simpleXshift: number;
   let slidershift = 346;
-  $: xshift = slidershift - (data.length - pastDays - futureDays);
+  $: simpleXshift = slidershift - (data.length - pastDays - futureDays);
+
+  const xshift: Writable<number> = tweened(-165, { duration: 1000, easing: sineOut });
+  $: $xshift = simpleXshift;
+
   let movavgn = 4;
 
   // let predictl;
@@ -76,14 +82,14 @@
 
   <!-- markers for historical data -->
   {#each data.filter(({ date }) => date.getDate() === 1) as { date } (date)}
-    <Datemark startdate={data[0].date} {date} {xscale} color="#555" {xshift} h={1030} />
+    <Datemark startdate={data[0].date} {date} {xscale} color="#555" xshift={$xshift} h={1030} />
   {/each}
   <Datemark
     startdate={data[0].date}
     date={new Date("2020-10-03")}
     {xscale}
     color="#555"
-    {xshift}
+    xshift={$xshift}
     h={800}
     label="Election"
   />
@@ -92,14 +98,21 @@
     date={new Date("2020-10-12")}
     {xscale}
     color="#555"
-    {xshift}
+    xshift={$xshift}
     h={950}
     label="Schools closed, gatherings restricted"
   />
 
   <!-- data points -->
   <Graph points={currentPoints.map((x) => x.cases)} {movavgn} {xscale} {yscale} fill="#f00" />
-  <Graph points={data.map((x) => x.cases)} {movavgn} {xscale} {yscale} {xshift} fill="#777" />
+  <Graph
+    points={data.map((x) => x.cases)}
+    {movavgn}
+    {xscale}
+    {yscale}
+    xshift={$xshift}
+    fill="#777"
+  />
 
   <!-- y axis -->
   <rect x="-75" y="-75" height="1150" width="70" fill="#eee" />
