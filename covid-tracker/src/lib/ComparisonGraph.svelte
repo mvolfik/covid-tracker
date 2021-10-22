@@ -116,7 +116,7 @@
 
   <!-- y axis -->
   <rect x="-75" y="-75" height="1150" width="70" fill="#eee" />
-  {#each range( 0, $max, [200, 500, 1000, 2000].find((x) => $max / x < 10), ).slice(1) as v (v)}
+  {#each range( 0, $max, [200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000].find((x) => $max / x < 10), ).slice(1) as v (v)}
     <polyline
       points="0,{1000 - v * yscale} 2000,{1000 - v * yscale}"
       style="fill: none; stroke: #222;"

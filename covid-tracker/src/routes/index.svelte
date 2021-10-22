@@ -12,6 +12,11 @@
           date: new Date(x["datum"]),
           cases: x["prirustkovy_pocet_nakazenych"],
         })),
+        tests: data["data"].map((x: any) => ({
+          date: new Date(x["datum"]),
+          cases:
+            x["prirustkovy_pocet_provedenych_testu"] + x["prirustkovy_pocet_provedenych_ag_testu"],
+        })),
       },
     };
   }
@@ -23,7 +28,11 @@
 
   export let lastUpdate: Date;
   export let cases: Array<{ date: Date; cases: number }>;
+  export let tests: Array<{ date: Date; cases: number }>;
 </script>
 
 <p>Data last updated on: {lastUpdate.toLocaleDateString()}</p>
+<p>Infections:</p>
 <ComparisonGraph pastDays={75} futureDays={45} data={cases} />
+<p>Tests:</p>
+<ComparisonGraph pastDays={75} futureDays={45} data={tests} />
