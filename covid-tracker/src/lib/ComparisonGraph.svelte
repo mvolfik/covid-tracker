@@ -23,7 +23,7 @@
   $: yscale = 1000 / $max;
 
   let simpleXshift: number;
-  let slidershift = 346;
+  let slidershift = 339;
   $: simpleXshift = slidershift - (data.length - pastDays - futureDays);
 
   const xshift: Writable<number> = tweened(-165, { duration: 1000, easing: sineOut });
