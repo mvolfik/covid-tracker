@@ -74,6 +74,13 @@
   />
   <Datemark
     startdate={currentPoints[0].date}
+    date={new Date("2021-11-01")}
+    {xscale}
+    color="#f00"
+    h={-30}
+  />
+  <Datemark
+    startdate={currentPoints[0].date}
     date={new Date("2021-11-12")}
     {xscale}
     color="#f00"
