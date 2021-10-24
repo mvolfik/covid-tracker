@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { formatDate } from "./utils";
+
   export let date: Date;
   export let startdate: Date;
   export let xshift = 0;
@@ -23,5 +25,5 @@
   text-anchor="middle"
   font-size="1.4em"
   fill={color}
-  style="white-space: pre-line;">{label ?? date.toLocaleDateString()}</text
+  style="white-space: pre-line;">{label ?? formatDate(date)}</text
 >

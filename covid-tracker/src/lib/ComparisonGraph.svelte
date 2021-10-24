@@ -6,15 +6,15 @@
   import type { Writable } from "svelte/store";
   import { sineOut } from "svelte/easing";
 
-  export let pastDays: number;
-  export let futureDays: number;
-  export let data: Array<{ date: Date; cases: number }>;
+  let pastDays = 60;
+  let futureDays = 25;
+  export let data: Array<{ date: Date; number: number }>;
 
   const max: Writable<number> = tweened(14000, { duration: 500, easing: sineOut });
   $: $max = data
     .slice(-simpleXshift, -simpleXshift + pastDays + futureDays + 1)
     .concat(currentPoints)
-    .reduce((m, { cases }) => Math.max(m, cases), 0);
+    .reduce((m, { number }) => (isFinite(number) ? Math.max(m, number) : m), 0);
 
   let xscale: number;
   let yscale: number;
@@ -23,7 +23,7 @@
   $: yscale = 1000 / $max;
 
   let simpleXshift: number;
-  let slidershift = 339;
+  let slidershift = 359;
   $: simpleXshift = slidershift - (data.length - pastDays - futureDays);
 
   const xshift: Writable<number> = tweened(-165, { duration: 1000, easing: sineOut });
@@ -38,19 +38,40 @@
   // $: predictl = DAYS - current.length + poverlap + 1;
   let currentPoints: typeof data;
   $: currentPoints = data.slice(data.length - pastDays);
+
+  function getNiceIntervalFor(maxVal: number, maxN = 10) {
+    const mults = [1, 2, 5];
+    if (maxVal >= 1) {
+      for (let n = 0; ; n++) {
+        const interval = mults[n % 3] * Math.pow(10, Math.floor(n / 3));
+        if (maxVal / interval < maxN) {
+          return interval;
+        }
+      }
+    } else {
+      let prevInterval;
+      for (let n = 0; ; n--) {
+        const interval = mults[2 + (n % 3)] * Math.pow(10, Math.floor((n - 1) / 3));
+        if (maxVal / interval > maxN) {
+          return prevInterval;
+        }
+        prevInterval = interval;
+      }
+    }
+  }
 </script>
 
 <div id="opts">
+  <span>Show x={futureDays} days ahead</span>
+  <input type="range" bind:value={futureDays} min="10" max="120" />
+  <span>Show x={pastDays} days back</span>
+  <input type="range" bind:value={pastDays} min="10" max="120" />
+
   <span>Historical data overlay position</span>
-  <input
-    type="range"
-    bind:value={slidershift}
-    min="0"
-    max={data.length - pastDays - futureDays}
-    style="width: 95%;"
-  />
+  <input type="range" bind:value={slidershift} min="0" max={data.length - pastDays - futureDays} />
   <span>Moving average: {movavgn} days</span>
-  <input type="range" bind:value={movavgn} min="1" max="14" style="width: 95%;" />
+  <input type="range" bind:value={movavgn} min="1" max="14" />
+
   <!-- <span>Překrýt predikci x={poverlap} dní</span>
 	<input type="range" bind:value={poverlap} min="0" max="10" style="width: 95%;" />
 	Predikovat z dat x={poverlap} dní zpět:<br />
@@ -58,10 +79,13 @@
 	Predikce n^(x={pmult}):<br />
 	<input type="range" bind:value={pmult} min="0" max="10" style="width: 95%;" /> -->
 </div>
-<svg viewBox="-75 -75 2075 1150">
-  <rect x="-75" y="-75" width="2075" height="1150" fill="#eee" />
+<svg viewBox="-75 -75 2080 1150">
+  <rect x="-75" y="-75" width="2080" height="1150" fill="#eee" />
+
   <!-- markers for current data -->
-  {#each currentPoints.filter(({ date }) => date.getDate() === 1) as { date } (date)}
+  {#each range(pastDays + futureDays)
+    .map((x) => new Date(currentPoints[0].date.valueOf() + x * 24 * 3600 * 1000))
+    .filter((date) => date.getDate() === 1) as date (date)}
     <Datemark startdate={currentPoints[0].date} {date} {xscale} color="#f00" xshift={0} h={-30} />
   {/each}
   <Datemark
@@ -71,13 +95,6 @@
     color="#f00"
     h={-70}
     label="Election"
-  />
-  <Datemark
-    startdate={currentPoints[0].date}
-    date={new Date("2021-11-01")}
-    {xscale}
-    color="#f00"
-    h={-30}
   />
   <Datemark
     startdate={currentPoints[0].date}
@@ -111,9 +128,9 @@
   />
 
   <!-- data points -->
-  <Graph points={currentPoints.map((x) => x.cases)} {movavgn} {xscale} {yscale} fill="#f00" />
+  <Graph points={currentPoints.map((x) => x.number)} {movavgn} {xscale} {yscale} fill="#f00" />
   <Graph
-    points={data.map((x) => x.cases)}
+    points={data.map((x) => x.number)}
     {movavgn}
     {xscale}
     {yscale}
@@ -123,7 +140,7 @@
 
   <!-- y axis -->
   <rect x="-75" y="-75" height="1150" width="70" fill="#eee" />
-  {#each range( 0, $max, [200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000].find((x) => $max / x < 10), ).slice(1) as v (v)}
+  {#each range(0, $max, getNiceIntervalFor($max, 10)) as v (v)}
     <polyline
       points="0,{1000 - v * yscale} 2000,{1000 - v * yscale}"
       style="fill: none; stroke: #222;"
@@ -135,7 +152,7 @@
       text-anchor="middle"
       font-size="1.4em"
       style="transform: rotate(-45deg); transform-origin: -35px {1000 - v * yscale}px;"
-      fill="#222">{v}</text
+      fill="#222">{v >= 1 ? v : v.toPrecision(3).replace(/0*$/, "")}</text
     >
   {/each}
   <rect x="-75" y="-75" height="100" width="200" fill="#ddd" />
@@ -151,7 +168,8 @@
     margin: 0 auto;
     display: block;
   }
-  div#opts {
+  #opts {
     display: grid;
+    grid-template-columns: auto 1fr;
   }
 </style>

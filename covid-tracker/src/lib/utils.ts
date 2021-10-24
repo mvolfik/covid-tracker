@@ -4,3 +4,7 @@ export function range(a: number, b: number | undefined = undefined, c = 1): numb
   }
   return [...Array(Math.ceil(Math.abs(b - a) / c)).keys()].map((x) => a + c * x);
 }
+
+export function formatDate(d: Date): string {
+  return d.toLocaleDateString(undefined, { timeZone: "UTC" });
+}

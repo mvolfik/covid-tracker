@@ -13,11 +13,18 @@
 
   let movavg: number[] = [];
   function calcMovavg(arr: number[], n: number) {
+    n -= 1; // maths with indexes :/
     const newarr = [];
-    for (let i = n - 1; i < arr.length; i++) {
+    for (let i = n; i < arr.length; i++) {
       let s = 0;
-      for (let j = i - n + 1; j <= i; j++) s += arr[j];
-      newarr.push(s / n);
+      let used = 0;
+      for (let j = i - n; j <= i; j++) {
+        if (isFinite(arr[j])) {
+          s += arr[j];
+          used += 1;
+        }
+      }
+      if (used > 0) newarr.push(s / used);
     }
     return newarr;
   }
@@ -42,7 +49,7 @@
   // $: predictpoints = calcPPs(points, predict, poverlap, pback, pmult);
 </script>
 
-{#each [...points.entries()] as [i, v]}
+{#each [...points.filter((x) => isFinite(x)).entries()] as [i, v]}
   <circle cx={(i + xshift) * xscale} cy={1000 - v * yscale} r="4" style="fill: {fill};" />
 {/each}
 <polyline
