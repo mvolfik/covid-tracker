@@ -5,6 +5,16 @@ export function range(a: number, b: number | undefined = undefined, c = 1): numb
   return [...Array(Math.ceil(Math.abs(b - a) / c)).keys()].map((x) => a + c * x);
 }
 
-export function formatDate(d: Date): string {
-  return d.toLocaleDateString(undefined, { timeZone: "UTC" });
+export function formatDate(d: Date, showDoW = false): string {
+  return d.toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    weekday: showDoW ? "short" : undefined,
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+}
+
+export function formatNum(v: number): string {
+  return v >= 1 ? v.toString() : v.toPrecision(3).replace(/0*$/, "");
 }

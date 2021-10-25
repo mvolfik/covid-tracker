@@ -74,24 +74,57 @@
   export let lastUpdate: Date;
   export let data: AllData;
 
-  let displayValue: Exclude<keyof AllData[number], "date"> = "cases";
+  type Key = Exclude<keyof AllData[number], "date">;
+  const options: Record<Key, string> = {
+    cases: "New Cases",
+    cured: "Cured",
+    deaths: "Deaths",
+    pcrTests: "PCR Tests",
+    agTests: "Antigen Tests",
+    totalTests: "Total Tests",
+    curInfected: "Currently Infected",
+    casesPerPcrTest: "New Cases per PCR Test",
+  };
+
+  let displayValue: Exclude<Key, "date"> = "cases";
 </script>
 
-<p>Data last updated on: {formatDate(lastUpdate)} (All dates in CE(S)T)</p>
-<p>
-  <label
-    >Display metric:
-    <select bind:value={displayValue}>
-      <option value="cases">New Cases</option>
-      <option value="cured">Cured</option>
-      <option value="deaths">Deaths</option>
-      <option value="pcrTests">PCR Tests</option>
-      <option value="agTests">Antigen Tests</option>
-      <option value="totalTests">Total Tests</option>
-      <option value="curInfected">Currently Infected</option>
-      <option value="casesPerPcrTest">New Cases per PCR Test</option>
-    </select>
-  </label>
-</p>
+<div class="outer">
+  <p>Data last updated on: {formatDate(lastUpdate)} (All dates in CE(S)T)</p>
+  <p>
+    <label
+      >Display metric:
+      <select bind:value={displayValue}>
+        {#each Object.entries(options) as [k, v] (k)}
+          <option value={k}>{v}</option>
+        {/each}
+      </select>
+    </label>
+  </p>
 
-<ComparisonGraph data={data.map((x) => ({ date: x.date, number: x[displayValue] }))} />
+  <div class="graph">
+    <ComparisonGraph
+      data={data.map((x) => ({ date: x.date, number: x[displayValue] }))}
+      label={options[displayValue]}
+    />
+  </div>
+</div>
+
+<style>
+  :global(html),
+  :global(body),
+  div {
+    margin: 0;
+    padding: 0;
+  }
+  .outer {
+    display: grid;
+    grid-template-areas: "a b" "c c";
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+  }
+  .graph {
+    grid-area: c;
+    min-height: 0;
+  }
+</style>

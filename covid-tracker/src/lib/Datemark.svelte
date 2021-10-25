@@ -19,11 +19,6 @@
   style="fill: none; stroke: {color};"
 />
 
-<text
-  {x}
-  y={1000 - h}
-  text-anchor="middle"
-  font-size="1.4em"
-  fill={color}
-  style="white-space: pre-line;">{label ?? formatDate(date)}</text
+<text {x} y={1000 - h} text-anchor="middle" fill={color} style="white-space: pre-line;"
+  >{label ?? formatDate(date)}</text
 >
