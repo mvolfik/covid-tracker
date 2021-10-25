@@ -75,7 +75,7 @@
     const { x, y } = pt.matrixTransform(SVGSVGElement.prototype.getScreenCTM.call(this)?.inverse());
     if (0 <= x && x <= 2000) {
       showPopup = true;
-      popupY = y;
+      popupY = Math.max(50, Math.min(950, y));
       closestPoint = Math.round(x / xscale);
     } else showPopup = false;
   }
@@ -85,7 +85,7 @@
 </script>
 
 <div class="outer">
-  <div id="opts">
+  <div class="opts">
     <span>Show x={futureDays} days ahead</span>
     <input type="range" bind:value={futureDays} min="10" max="120" />
     <span>Show x={pastDays} days back</span>
@@ -250,16 +250,16 @@
     grid-template-rows: auto 1fr;
     height: 100%;
   }
-  #opts {
+  .opts {
     display: grid;
     grid-template-columns: auto 1fr;
     padding: 0 1rem;
   }
   svg {
-    height: 100%;
+    max-height: 100%;
+    max-width: 100%;
     margin: 0 auto;
     display: block;
-    max-width: 100%;
   }
   svg :global(text) {
     font-size: 1.5rem;
