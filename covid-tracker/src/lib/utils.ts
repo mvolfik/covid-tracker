@@ -16,5 +16,5 @@ export function formatDate(d: Date, showDoW = false): string {
 }
 
 export function formatNum(v: number): string {
-  return v >= 1 ? v.toString() : v.toPrecision(3).replace(/0*$/, "");
+  return v >= 1 || v === 0 ? v.toString() : v.toPrecision(3).replace(/0*$/, "");
 }

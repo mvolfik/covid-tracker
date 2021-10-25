@@ -127,4 +127,7 @@
     grid-area: c;
     min-height: 0;
   }
+  p {
+    margin: 0.3rem 1rem;
+  }
 </style>

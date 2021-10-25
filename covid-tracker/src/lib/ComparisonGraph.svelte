@@ -5,6 +5,7 @@
   import { formatDate, formatNum, range } from "./utils";
   import type { Writable } from "svelte/store";
   import { sineOut } from "svelte/easing";
+  import OverlayShifter from "./OverlayShifter.svelte";
 
   let pastDays = 60;
   let futureDays = 25;
@@ -20,9 +21,8 @@
   $: xscale = 2000 / (pastDays + futureDays);
   $: yscale = 1000 / $max;
 
-  let slidershift = 360;
-  $: simpleXshift = slidershift - (data.length - pastDays - futureDays);
-
+  let displayShift = 385;
+  $: simpleXshift = displayShift - (data.length - pastDays);
   const xshift: Writable<number> = tweened(-165, { duration: 1000, easing: sineOut });
   $: $xshift = simpleXshift;
 
@@ -61,12 +61,12 @@
   let popupY: number;
 
   $: popupX = closestPoint * xscale;
-  $: popupCurrent = currentPoints.find(
-    ({ date }) => date.valueOf() === currentPoints[closestPoint]?.date?.valueOf(),
+  $: popupCurrentDate = new Date(currentPoints[0].date.valueOf() + closestPoint * 24 * 3600 * 1000);
+  $: popupCurrent = currentPoints.find(({ date }) => date.valueOf() === popupCurrentDate.valueOf());
+  $: popupHistoricalDate = new Date(
+    data[0].date.valueOf() + (closestPoint - simpleXshift) * 24 * 3600 * 1000,
   );
-  $: popupHistorical = data.find(
-    ({ date }) => date.valueOf() === data[closestPoint - simpleXshift]?.date?.valueOf(),
-  );
+  $: popupHistorical = data.find(({ date }) => date.valueOf() === popupHistoricalDate.valueOf());
 
   function handleMouseMove(this: SVGSVGElement, e: MouseEvent) {
     const pt = this.createSVGPoint();
@@ -86,18 +86,12 @@
 
 <div class="outer">
   <div class="opts">
-    <span>Show x={futureDays} days ahead</span>
+    <!-- <span>Show x={futureDays} days ahead</span>
     <input type="range" bind:value={futureDays} min="10" max="120" />
     <span>Show x={pastDays} days back</span>
-    <input type="range" bind:value={pastDays} min="10" max="120" />
-
+    <input type="range" bind:value={pastDays} min="10" max="120" /> -->
     <span>Historical data overlay position</span>
-    <input
-      type="range"
-      bind:value={slidershift}
-      min="0"
-      max={data.length - pastDays - futureDays}
-    />
+    <OverlayShifter bind:shift={displayShift} max={data.length - 1} />
     <span>Moving average: {movavgn} days</span>
     <input type="range" bind:value={movavgn} min="1" max="14" />
 
@@ -202,27 +196,25 @@
         <path
           d={popupX < 1630
             ? `M ${popupX + xscale / 2} ${popupY}
-             l 19 -11
-             v -39
-             h 300
-             v 100
-             h -300
-             v -39
-             Z`
+               l 19 -11
+               v -39
+               h 300
+               v 100
+               h -300
+               v -39
+               Z`
             : `M ${popupX - xscale / 2} ${popupY}
-             l -19 -11
-             v -39
-             h -300
-             v 100
-             h 300
-             v -39
-             Z`}
+               l -19 -11
+               v -39
+               h -300
+               v 100
+               h 300
+               v -39
+               Z`}
           fill="#06fb"
         />
         <text x={popupRelX(10)} y={popupY - 27}
-          >Current data {popupCurrent === undefined
-            ? ""
-            : `(${formatDate(popupCurrent.date, true)})`}</text
+          >Current data ({formatDate(popupCurrentDate, true)})</text
         >
         <text x={popupRelX(20)} y={popupY - 7}
           >{popupCurrent === undefined
@@ -230,13 +222,11 @@
             : `${formatNum(popupCurrent.number)} ${label}`}</text
         >
         <text x={popupRelX(10)} y={popupY + 16}
-          >Historical data {popupHistorical === undefined
-            ? ""
-            : `(${formatDate(popupHistorical.date, true)})`}</text
+          >Historical data ({formatDate(popupHistoricalDate, true)})</text
         >
         <text x={popupRelX(20)} y={popupY + 36}
           >{popupHistorical === undefined
-            ? "Unknown error happened"
+            ? "The overlay doesn't reach here"
             : `${formatNum(popupHistorical.number)} ${label}`}</text
         >
       </g>
@@ -254,6 +244,7 @@
     display: grid;
     grid-template-columns: auto 1fr;
     padding: 0 1rem;
+    gap: 0 0.3rem;
   }
   svg {
     max-height: 100%;
